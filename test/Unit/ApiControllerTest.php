@@ -1,0 +1,253 @@
+<?php
+
+namespace Tests\Unit;
+
+use YourVendor\CI4ApiBase\Controllers\ApiController;
+use CodeIgniter\HTTP\ResponseInterface;
+use CodeIgniter\HTTP\IncomingRequest;
+use CodeIgniter\Test\CIUnitTestCase;
+use CodeIgniter\Test\Mock\MockIncomingRequest;
+use InvalidArgumentException;
+use RuntimeException;
+
+/**
+ * ApiController Unit Tests
+ * 
+ * Tests the core functionality of the base ApiController.
+ */
+class ApiControllerTest extends CIUnitTestCase
+{
+    protected ApiController $controller;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Create a concrete implementation for testing
+        $this->controller = new class extends ApiController {
+            private object $service;
+
+            public function setService(object $service): void
+            {
+                $this->service = $service;
+            }
+
+            protected function getService(): object
+            {
+                return $this->service ?? new class {
+                    public function testMethod(array $data): array
+                    {
+                        return ['success' => true, 'data' => $data];
+                    }
+
+                    public function throwException(array $data): array
+                    {
+                        throw new InvalidArgumentException('Test exception');
+                    }
+                };
+            }
+
+            protected function getSuccessStatus(string $method): int
+            {
+                return match ($method) {
+                    'testMethod' => ResponseInterface::HTTP_OK,
+                    default => ResponseInterface::HTTP_OK,
+                };
+            }
+
+            // Expose protected methods for testing
+            public function publicCollectRequestData(?array $item = null): array
+            {
+                return $this->collectRequestData($item);
+            }
+
+            public function publicGetJsonData(): array
+            {
+                return $this->getJsonData();
+            }
+
+            public function publicDetermineStatus(array $result, string $method): int
+            {
+                return $this->determineStatus($result, $method);
+            }
+
+            public function publicHandleException(\Exception $e): ResponseInterface
+            {
+                return $this->handleException($e);
+            }
+        };
+    }
+
+    public function testCollectRequestDataMergesAllSources(): void
+    {
+        // Mock request with GET and POST data
+        $request = new MockIncomingRequest(
+            new \Config\App(),
+            new \CodeIgniter\HTTP\URI('http://example.com/api/test?param1=value1'),
+            null,
+            new \CodeIgniter\HTTP\UserAgent()
+        );
+
+        $this->controller->request = $request;
+
+        // Inject additional item data
+        $itemData = ['id' => 123];
+
+        $result = $this->controller->publicCollectRequestData($itemData);
+
+        // Assert item data is included
+        $this->assertArrayHasKey('id', $result);
+        $this->assertEquals(123, $result['id']);
+    }
+
+    public function testGetJsonDataParsesValidJson(): void
+    {
+        $jsonData = json_encode(['name' => 'Test Product', 'price' => 99.99]);
+
+        $request = new MockIncomingRequest(
+            new \Config\App(),
+            new \CodeIgniter\HTTP\URI('http://example.com/api/test'),
+            $jsonData,
+            new \CodeIgniter\HTTP\UserAgent()
+        );
+
+        $this->controller->request = $request;
+
+        $result = $this->controller->publicGetJsonData();
+
+        $this->assertIsArray($result);
+        $this->assertEquals('Test Product', $result['name']);
+        $this->assertEquals(99.99, $result['price']);
+    }
+
+    public function testGetJsonDataReturnsEmptyArrayForInvalidJson(): void
+    {
+        $request = new MockIncomingRequest(
+            new \Config\App(),
+            new \CodeIgniter\HTTP\URI('http://example.com/api/test'),
+            'invalid json{',
+            new \CodeIgniter\HTTP\UserAgent()
+        );
+
+        $this->controller->request = $request;
+
+        $result = $this->controller->publicGetJsonData();
+
+        $this->assertIsArray($result);
+        $this->assertEmpty($result);
+    }
+
+    public function testGetJsonDataReturnsEmptyArrayForEmptyBody(): void
+    {
+        $request = new MockIncomingRequest(
+            new \Config\App(),
+            new \CodeIgniter\HTTP\URI('http://example.com/api/test'),
+            '',
+            new \CodeIgniter\HTTP\UserAgent()
+        );
+
+        $this->controller->request = $request;
+
+        $result = $this->controller->publicGetJsonData();
+
+        $this->assertIsArray($result);
+        $this->assertEmpty($result);
+    }
+
+    public function testDetermineStatusReturnsSuccessStatusWhenNoErrors(): void
+    {
+        $result = ['data' => ['id' => 1]];
+        $method = 'testMethod';
+
+        $status = $this->controller->publicDetermineStatus($result, $method);
+
+        $this->assertEquals(ResponseInterface::HTTP_OK, $status);
+    }
+
+    public function testDetermineStatusReturnsBadRequestWhenErrorsExist(): void
+    {
+        $result = ['errors' => ['name' => 'Name is required']];
+        $method = 'testMethod';
+
+        $status = $this->controller->publicDetermineStatus($result, $method);
+
+        $this->assertEquals(ResponseInterface::HTTP_BAD_REQUEST, $status);
+    }
+
+    public function testHandleExceptionReturnsAppropriateStatusForInvalidArgumentException(): void
+    {
+        $exception = new InvalidArgumentException('Invalid input');
+
+        $response = $this->controller->publicHandleException($exception);
+
+        $this->assertEquals(ResponseInterface::HTTP_BAD_REQUEST, $response->getStatusCode());
+
+        $body = json_decode($response->getBody(), true);
+        $this->assertEquals('Invalid input', $body['error']);
+    }
+
+    public function testHandleExceptionReturnsAppropriateStatusForRuntimeException(): void
+    {
+        $exception = new RuntimeException('Server error');
+
+        $response = $this->controller->publicHandleException($exception);
+
+        $this->assertEquals(ResponseInterface::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
+
+        $body = json_decode($response->getBody(), true);
+        $this->assertEquals('Server error', $body['error']);
+    }
+
+    public function testRespondCreatedReturns201Status(): void
+    {
+        $data = ['id' => 1, 'name' => 'New Product'];
+
+        $response = $this->controller->respondCreated($data);
+
+        $this->assertEquals(ResponseInterface::HTTP_CREATED, $response->getStatusCode());
+
+        $body = json_decode($response->getBody(), true);
+        $this->assertEquals($data, $body);
+    }
+
+    public function testRespondNoContentReturns204Status(): void
+    {
+        $response = $this->controller->respondNoContent();
+
+        $this->assertEquals(ResponseInterface::HTTP_NO_CONTENT, $response->getStatusCode());
+    }
+
+    public function testRespondNotFoundReturns404Status(): void
+    {
+        $message = 'Product not found';
+
+        $response = $this->controller->respondNotFound($message);
+
+        $this->assertEquals(ResponseInterface::HTTP_NOT_FOUND, $response->getStatusCode());
+
+        $body = json_decode($response->getBody(), true);
+        $this->assertEquals($message, $body['error']);
+    }
+
+    public function testRespondUnauthorizedReturns401Status(): void
+    {
+        $response = $this->controller->respondUnauthorized();
+
+        $this->assertEquals(ResponseInterface::HTTP_UNAUTHORIZED, $response->getStatusCode());
+
+        $body = json_decode($response->getBody(), true);
+        $this->assertEquals('Unauthorized', $body['error']);
+    }
+
+    public function testRespondValidationErrorReturns422Status(): void
+    {
+        $errors = ['name' => 'Name is required', 'price' => 'Price must be numeric'];
+
+        $response = $this->controller->respondValidationError($errors);
+
+        $this->assertEquals(ResponseInterface::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
+
+        $body = json_decode($response->getBody(), true);
+        $this->assertEquals($errors, $body['errors']);
+    }
+}
