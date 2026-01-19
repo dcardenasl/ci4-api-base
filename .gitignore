@@ -1,0 +1,47 @@
+# Composer
+/vendor/
+composer.lock
+
+# PHPUnit
+/coverage/
+.phpunit.result.cache
+phpunit.xml
+
+# PHPStan
+.phpstan.cache
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+.DS_Store
+._*
+
+# Logs
+*.log
+/logs/
+
+# Cache
+/cache/
+*.cache
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+/build/
+/dist/
+
+# Temporary files
+/tmp/
+*.tmp
+*.bak
+*.old

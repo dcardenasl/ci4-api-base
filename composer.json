@@ -1,0 +1,48 @@
+{
+  "name": "dcardenasl/ci4-api-base",
+  "description": "Lightweight base API controller for CodeIgniter 4 with standardized request handling",
+  "type": "library",
+  "keywords": [
+    "codeigniter4",
+    "api",
+    "rest",
+    "controller",
+    "base-controller"
+  ],
+  "homepage": "https://github.com/dcardenasl/ci4-api-base",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "David Cárdenas L.",
+      "email": "code.dcl@gmail.com"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/dcardenasl/ci4-api-base/issues",
+    "source": "https://github.com/dcardenasl/ci4-api-base"
+  },
+  "require": {
+    "php": "^8.0",
+    "codeigniter4/framework": "^4.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5",
+    "phpstan/phpstan": "^1.10"
+  },
+  "autoload": {
+    "psr-4": {
+      "dcardenasl\\CI4ApiBase\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "analyse": "phpstan analyse src --level=5"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
