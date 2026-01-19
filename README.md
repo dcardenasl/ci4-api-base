@@ -1,7 +1,7 @@
 # CI4 API Base Controller
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PHP Version](https://img.shields.io/badge/PHP-8.0%2B-blue.svg)](https://www.php.net)
+[![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://www.php.net)
 [![CodeIgniter](https://img.shields.io/badge/CodeIgniter-4.0%2B-red.svg)](https://codeigniter.com)
 
 A lightweight, standardized base controller for building RESTful APIs in CodeIgniter 4.
@@ -215,8 +215,8 @@ Everything else is automatic.
 
 ## Requirements
 
-- PHP 8.0+
-- CodeIgniter 4.0+
+- PHP 8.1+
+- CodeIgniter 4.5+
 
 ## Contributing
 

@@ -93,6 +93,11 @@ Tests use anonymous classes to:
 - Test namespace: `Tests`
 - Controllers: `dcardenasl\CI4ApiBase\Controllers`
 
+## Requirements
+
+- PHP 8.1+ (CodeIgniter 4.5+ requires PHP 8.1 minimum)
+- CodeIgniter 4.5+
+
 ## Implementation Pattern
 
 When extending `ApiController`, you must implement:
