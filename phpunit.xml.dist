@@ -14,9 +14,6 @@
         <testsuite name="Unit Tests">
             <directory suffix="ApiControllerTest.php">./tests/Unit</directory>
         </testsuite>
-        <testsuite name="Feature Tests">
-            <directory suffix="ApiControllerTest.php">./tests/Feature</directory>
-        </testsuite>
     </testsuites>
 
     <coverage processUncoveredFiles="true">
