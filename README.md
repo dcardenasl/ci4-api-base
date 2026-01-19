@@ -18,7 +18,7 @@ Stop writing the same request handling code in every controller. This base contr
 ## Installation
 
 ```bash
-composer require your-vendor/ci4-api-base
+composer require dcardenasl/ci4-api-base
 ```
 
 ## Quick Start
@@ -30,7 +30,7 @@ composer require your-vendor/ci4-api-base
 
 namespace App\Controllers\Api;
 
-use YourVendor\CI4ApiBase\Controllers\ApiController;
+use dcardenasl\CI4ApiBase\Controllers\ApiController;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class ProductController extends ApiController
@@ -228,8 +228,8 @@ MIT License - see [LICENSE](LICENSE) file.
 
 ## Support
 
-- Issues: [GitHub Issues](https://github.com/your-vendor/ci4-api-base/issues)
-- Discussions: [GitHub Discussions](https://github.com/your-vendor/ci4-api-base/discussions)
+- Issues: [GitHub Issues](https://github.com/dcardenasl/ci4-api-base/issues)
+- Discussions: [GitHub Discussions](https://github.com/dcardenasl/ci4-api-base/discussions)
 
 ---
 

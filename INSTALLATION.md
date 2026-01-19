@@ -74,7 +74,7 @@ Create `app/Controllers/Api/ProductController.php`:
 
 namespace App\Controllers\Api;
 
-use YourVendor\CI4ApiBase\Controllers\ApiController;
+use dcardenasl\CI4ApiBase\Controllers\ApiController;
 use CodeIgniter\HTTP\ResponseInterface;
 use App\Services\ProductService;
 
