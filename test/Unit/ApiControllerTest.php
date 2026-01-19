@@ -2,17 +2,19 @@
 
 namespace Tests\Unit;
 
-use YourVendor\CI4ApiBase\Controllers\ApiController;
+use dcardenasl\CI4ApiBase\Controllers\ApiController;
 use CodeIgniter\HTTP\ResponseInterface;
-use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\Mock\MockIncomingRequest;
+use CodeIgniter\HTTP\URI;
+use CodeIgniter\HTTP\UserAgent;
+use Config\Services;
 use InvalidArgumentException;
 use RuntimeException;
 
 /**
  * ApiController Unit Tests
- * 
+ *
  * Tests the core functionality of the base ApiController.
  */
 class ApiControllerTest extends CIUnitTestCase
@@ -76,26 +78,27 @@ class ApiControllerTest extends CIUnitTestCase
                 return $this->handleException($e);
             }
         };
+
+        // Initialize CI4 response service
+        $this->controller->response = Services::response();
     }
 
     public function testCollectRequestDataMergesAllSources(): void
     {
-        // Mock request with GET and POST data
         $request = new MockIncomingRequest(
             new \Config\App(),
-            new \CodeIgniter\HTTP\URI('http://example.com/api/test?param1=value1'),
+            new URI('http://example.com/api/test?param1=value1'),
             null,
-            new \CodeIgniter\HTTP\UserAgent()
+            new UserAgent(),
+            'GET'
         );
 
         $this->controller->request = $request;
 
-        // Inject additional item data
         $itemData = ['id' => 123];
 
         $result = $this->controller->publicCollectRequestData($itemData);
 
-        // Assert item data is included
         $this->assertArrayHasKey('id', $result);
         $this->assertEquals(123, $result['id']);
     }
@@ -106,9 +109,10 @@ class ApiControllerTest extends CIUnitTestCase
 
         $request = new MockIncomingRequest(
             new \Config\App(),
-            new \CodeIgniter\HTTP\URI('http://example.com/api/test'),
+            new URI('http://example.com/api/test'),
             $jsonData,
-            new \CodeIgniter\HTTP\UserAgent()
+            new UserAgent(),
+            'POST'
         );
 
         $this->controller->request = $request;
@@ -124,9 +128,10 @@ class ApiControllerTest extends CIUnitTestCase
     {
         $request = new MockIncomingRequest(
             new \Config\App(),
-            new \CodeIgniter\HTTP\URI('http://example.com/api/test'),
+            new URI('http://example.com/api/test'),
             'invalid json{',
-            new \CodeIgniter\HTTP\UserAgent()
+            new UserAgent(),
+            'POST'
         );
 
         $this->controller->request = $request;
@@ -141,9 +146,10 @@ class ApiControllerTest extends CIUnitTestCase
     {
         $request = new MockIncomingRequest(
             new \Config\App(),
-            new \CodeIgniter\HTTP\URI('http://example.com/api/test'),
+            new URI('http://example.com/api/test'),
             '',
-            new \CodeIgniter\HTTP\UserAgent()
+            new UserAgent(),
+            'POST'
         );
 
         $this->controller->request = $request;
@@ -174,7 +180,7 @@ class ApiControllerTest extends CIUnitTestCase
         $this->assertEquals(ResponseInterface::HTTP_BAD_REQUEST, $status);
     }
 
-    public function testHandleExceptionReturnsAppropriateStatusForInvalidArgumentException(): void
+    public function testHandleExceptionReturnsBadRequestForInvalidArgumentException(): void
     {
         $exception = new InvalidArgumentException('Invalid input');
 
@@ -186,7 +192,7 @@ class ApiControllerTest extends CIUnitTestCase
         $this->assertEquals('Invalid input', $body['error']);
     }
 
-    public function testHandleExceptionReturnsAppropriateStatusForRuntimeException(): void
+    public function testHandleExceptionReturns500ForRuntimeException(): void
     {
         $exception = new RuntimeException('Server error');
 

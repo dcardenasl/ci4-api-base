@@ -22,10 +22,10 @@
     "source": "https://github.com/dcardenasl/ci4-api-base"
   },
   "require": {
-    "php": "^8.0",
-    "codeigniter4/framework": "^4.0"
+    "php": "^8.0"
   },
   "require-dev": {
+    "codeigniter4/framework": "^4.5",
     "phpunit/phpunit": "^9.5",
     "phpstan/phpstan": "^1.10"
   },
