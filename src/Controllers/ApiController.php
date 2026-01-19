@@ -78,8 +78,8 @@ abstract class ApiController extends Controller
         $requestData = array_merge(
             $this->request->getGet() ?? [],
             $this->request->getPost() ?? [],
-            $this->request->getRawInput() ?? [],
-            $this->request->getFiles() ?? [],
+            $this->request->getRawInput(),
+            $this->request->getFiles(),
             $this->getJsonData(),
             $item ?? []
         );

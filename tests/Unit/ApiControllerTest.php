@@ -11,6 +11,7 @@ use CodeIgniter\HTTP\UserAgent;
 use Config\Services;
 use InvalidArgumentException;
 use RuntimeException;
+use ReflectionProperty;
 
 class ApiControllerTest extends CIUnitTestCase
 {
@@ -69,10 +70,43 @@ class ApiControllerTest extends CIUnitTestCase
             {
                 return $this->handleException($e);
             }
+
+            // Expose protected response methods
+            public function respondCreated(array $data = []): ResponseInterface
+            {
+                return parent::respondCreated($data);
+            }
+
+            public function respondNoContent(): ResponseInterface
+            {
+                return parent::respondNoContent();
+            }
+
+            public function respondNotFound(string $message = 'Resource not found'): ResponseInterface
+            {
+                return parent::respondNotFound($message);
+            }
+
+            public function respondUnauthorized(string $message = 'Unauthorized'): ResponseInterface
+            {
+                return parent::respondUnauthorized($message);
+            }
+
+            public function respondValidationError(array $errors): ResponseInterface
+            {
+                return parent::respondValidationError($errors);
+            }
         };
 
-        // ✅ Proper CI4 way
-        $this->controller->setResponse(Services::response());
+        // 🔐 Inject protected properties via reflection
+        $this->injectProperty($this->controller, 'response', Services::response());
+    }
+
+    protected function injectProperty(object $object, string $property, mixed $value): void
+    {
+        $ref = new ReflectionProperty($object, $property);
+        $ref->setAccessible(true);
+        $ref->setValue($object, $value);
     }
 
     public function testCollectRequestDataMergesAllSources(): void
@@ -85,10 +119,9 @@ class ApiControllerTest extends CIUnitTestCase
             'GET'
         );
 
-        $this->controller->setRequest($request);
+        $this->injectProperty($this->controller, 'request', $request);
 
         $itemData = ['id' => 123];
-
         $result = $this->controller->publicCollectRequestData($itemData);
 
         $this->assertArrayHasKey('id', $result);
@@ -107,7 +140,7 @@ class ApiControllerTest extends CIUnitTestCase
             'POST'
         );
 
-        $this->controller->setRequest($request);
+        $this->injectProperty($this->controller, 'request', $request);
 
         $result = $this->controller->publicGetJsonData();
 
@@ -126,7 +159,7 @@ class ApiControllerTest extends CIUnitTestCase
             'POST'
         );
 
-        $this->controller->setRequest($request);
+        $this->injectProperty($this->controller, 'request', $request);
 
         $result = $this->controller->publicGetJsonData();
 
@@ -144,7 +177,7 @@ class ApiControllerTest extends CIUnitTestCase
             'POST'
         );
 
-        $this->controller->setRequest($request);
+        $this->injectProperty($this->controller, 'request', $request);
 
         $result = $this->controller->publicGetJsonData();
 
@@ -174,8 +207,7 @@ class ApiControllerTest extends CIUnitTestCase
         $response  = $this->controller->publicHandleException($exception);
 
         $this->assertEquals(ResponseInterface::HTTP_BAD_REQUEST, $response->getStatusCode());
-        $body = json_decode($response->getBody(), true);
-        $this->assertEquals('Invalid input', $body['error']);
+        $this->assertEquals('Invalid input', json_decode($response->getBody(), true)['error']);
     }
 
     public function testHandleExceptionReturns500ForRuntimeException(): void
@@ -184,8 +216,7 @@ class ApiControllerTest extends CIUnitTestCase
         $response  = $this->controller->publicHandleException($exception);
 
         $this->assertEquals(ResponseInterface::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
-        $body = json_decode($response->getBody(), true);
-        $this->assertEquals('Server error', $body['error']);
+        $this->assertEquals('Server error', json_decode($response->getBody(), true)['error']);
     }
 
     public function testRespondCreatedReturns201Status(): void
